@@ -5,6 +5,15 @@ import numpy as np
 
 
 def update(screen, cells, size, with_progress=False):
+    '''
+    Updates all cells status for the current cycle.
+
+    :param screen: Screen in which the game is displayed.
+    :param cells: Cells matrix.
+    :param size: Size of each cell.
+    :param with_progress: Whether the game is currently playing or not.
+    :return: Updated cells matrix.
+    '''
     updated_cells = np.zeros((cells.shape[0], cells.shape[1]))
 
     for row, col in np.ndindex(cells.shape):
@@ -34,37 +43,65 @@ def update(screen, cells, size, with_progress=False):
 
     return updated_cells
 
+def add_cell(screen, cells):
+    '''
+    Adds a cell in the current mouse position (activated whenever the user left-clicks on a cell).
+
+    :param screen: Screen in which the game is displayed.
+    :param cells: Cells matrix.
+    :return: None
+    '''
+    pos = pygame.mouse.get_pos()
+    cells[pos[1] // 10, pos[0] // 10] = 1
+    update(screen, cells, 10)
+    pygame.display.update()
 
 def main():
-    pygame.init()
-    screen = pygame.display.set_mode((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT))
+    '''
+    Main method which runs the game.
 
-    cells = np.zeros((60, 80))
+    :return: None
+    '''
+
+    # Initialize Pygame
+    pygame.init()
+
+    # Display config
+    screen = pygame.display.set_mode((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT))
+    cells = np.zeros(constants.CELL_AMOUNT)
     screen.fill(constants.COLOR_GRID)
     update(screen, cells, 10)
     pygame.display.flip()
     pygame.display.update()
 
+    # Pause/Resume
     running = False
 
+    # Main playable loop
     while True:
         for event in pygame.event.get():
+            # Quit game
             if event.type == pygame.QUIT:
+                print("Quitting game...")
                 pygame.quit()
                 return
+            # Pause/Resume game
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
+                    if running:
+                        print("Game paused.")
+                    else:
+                        print("Game resumed.")
                     running = not running
                     update(screen, cells, 10)
                     pygame.display.update()
+            # If user left-clicks, add a cell
             if pygame.mouse.get_pressed()[0]:
-                pos = pygame.mouse.get_pos()
-                cells[pos[1] // 10, pos[0] // 10] = 1
-                update(screen, cells, 10)
-                pygame.display.update()
+                add_cell(screen, cells)
 
         screen.fill(constants.COLOR_GRID)
 
+        # If game is not paused, continue with the simulation
         if running:
             cells = update(screen, cells, 10, with_progress=True)
             pygame.display.update()
